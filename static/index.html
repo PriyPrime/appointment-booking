@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Appointly — book an appointment</title>
+  <meta name="description" content="Browse services, choose a provider and book an appointment.">
+  <!-- Inline icon so the page does not make a failing /favicon.ico request. -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f6f5c'/%3E%3Ctext x='32' y='45' font-family='sans-serif' font-size='38' font-weight='700' fill='white' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#" aria-label="Appointly home">
+      Appoint<span>ly</span>
+    </a>
+    <nav class="main-nav" aria-label="Main">
+      <button class="nav-button is-active" type="button" data-view="book" aria-current="page">
+        Book
+      </button>
+      <button class="nav-button" type="button" data-view="appointments">
+        My appointments
+      </button>
+      <button class="nav-button" type="button" data-view="manage" data-roles="admin" hidden>
+        Manage
+      </button>
+      <button class="nav-button" type="button" data-view="availability" data-roles="provider admin" hidden>
+        Availability
+      </button>
+    </nav>
+    <div id="account-bar" class="account-bar" aria-live="polite"></div>
+  </header>
+
+  <main class="page">
+    <div id="message" class="message" role="status" aria-live="polite" hidden></div>
+
+    <section id="book-view" class="view">
+      <section id="auth-panel" class="card auth-card" aria-labelledby="auth-title">
+        <div class="auth-intro">
+          <h1 id="auth-title">Book your next appointment</h1>
+          <p>Sign in to book, reschedule or cancel. Browsing is open to everyone.</p>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Account">
+          <button id="login-tab" class="tab is-active" type="button" role="tab"
+                  aria-selected="true" aria-controls="login-form" data-auth-tab="login">
+            Sign in
+          </button>
+          <button id="register-tab" class="tab" type="button" role="tab"
+                  aria-selected="false" aria-controls="register-form" data-auth-tab="register">
+            Create account
+          </button>
+        </div>
+
+        <form id="login-form" class="auth-form" aria-labelledby="login-tab">
+          <label>
+            Email
+            <input id="login-email" name="email" type="email" autocomplete="email"
+                   required placeholder="you@example.com">
+          </label>
+          <label>
+            Password
+            <input id="login-password" name="password" type="password"
+                   autocomplete="current-password" required placeholder="Your password">
+          </label>
+          <button id="login-submit" class="button primary" type="submit">Sign in</button>
+        </form>
+
+        <form id="register-form" class="auth-form" aria-labelledby="register-tab" hidden>
+          <label>
+            Name
+            <input id="register-name" name="name" type="text" autocomplete="name"
+                   required maxlength="80" placeholder="Your name">
+          </label>
+          <label>
+            Email
+            <input id="register-email" name="email" type="email" autocomplete="email"
+                   required placeholder="you@example.com">
+          </label>
+          <label>
+            Phone <span class="optional">(optional)</span>
+            <input id="register-phone" name="phone" type="tel" autocomplete="tel"
+                   maxlength="30" placeholder="555-0100">
+          </label>
+          <label>
+            Password
+            <input id="register-password" name="password" type="password"
+                   autocomplete="new-password" required minlength="8"
+                   placeholder="At least 8 characters">
+          </label>
+          <button id="register-submit" class="button primary" type="submit">Create account</button>
+        </form>
+      </section>
+
+      <div class="booking-layout">
+        <section class="card step" aria-labelledby="service-heading">
+          <div class="step-head">
+            <span class="step-number" aria-hidden="true">1</span>
+            <h2 id="service-heading">Choose a service</h2>
+          </div>
+          <div id="service-list" class="choice-list">
+            <p class="muted">Loading services…</p>
+          </div>
+        </section>
+
+        <section class="card step" aria-labelledby="provider-heading">
+          <div class="step-head">
+            <span class="step-number" aria-hidden="true">2</span>
+            <h2 id="provider-heading">Choose a provider</h2>
+          </div>
+          <div id="provider-list" class="choice-list">
+            <p class="muted">Pick a service first.</p>
+          </div>
+        </section>
+
+        <section class="card step time-step" aria-labelledby="time-heading">
+          <div class="step-head">
+            <span class="step-number" aria-hidden="true">3</span>
+            <h2 id="time-heading">Pick a date and time</h2>
+          </div>
+
+          <label class="date-field">
+            Date
+            <input id="booking-date" type="date" disabled>
+          </label>
+
+          <div id="slot-area" class="slot-area">
+            <p class="muted">Choose a provider to see available times.</p>
+          </div>
+
+          <label class="notes-field">
+            Notes <span class="optional">(optional)</span>
+            <textarea id="booking-notes" maxlength="500" rows="3"
+                      placeholder="Anything the provider should know?"></textarea>
+          </label>
+
+          <button id="book-button" class="button primary wide" type="button" disabled>
+            Choose a time
+          </button>
+        </section>
+      </div>
+    </section>
+
+    <section id="appointments-view" class="view" hidden aria-labelledby="appointments-heading">
+      <div class="section-head">
+        <div>
+          <h1 id="appointments-heading">My appointments</h1>
+          <p class="muted">Cancel or move a booking while it is still booked.</p>
+        </div>
+        <button id="refresh-appointments" class="button ghost" type="button">Refresh</button>
+      </div>
+      <div id="appointments-list">
+        <p class="muted">Loading appointments…</p>
+      </div>
+    </section>
+    <section id="manage-view" class="view" hidden aria-labelledby="manage-heading">
+      <div class="section-head">
+        <div>
+          <h1 id="manage-heading">Manage</h1>
+          <p class="muted">Services, providers and the numbers behind them.</p>
+        </div>
+        <button id="refresh-manage" class="button ghost" type="button">Refresh</button>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Management">
+        <button class="tab is-active" type="button" role="tab" aria-selected="true"
+                data-admin-tab="services">Services</button>
+        <button class="tab" type="button" role="tab" aria-selected="false"
+                data-admin-tab="providers">Providers</button>
+        <button class="tab" type="button" role="tab" aria-selected="false"
+                data-admin-tab="reports">Reports</button>
+      </div>
+
+      <section class="admin-panel" data-admin-panel="services" aria-label="Services">
+        <div class="panel-grid">
+          <div class="card panel-card">
+            <h2>All services</h2>
+            <p class="muted">Inactive services stay out of the booking page.</p>
+            <div id="service-admin-list" class="table-wrap">
+              <p class="muted">Loading services…</p>
+            </div>
+          </div>
+
+          <div class="card panel-card">
+            <h2 id="service-form-title">New service</h2>
+            <form id="service-form" class="stack-form">
+              <input id="service-id" type="hidden">
+              <label>
+                Name
+                <input id="service-name" type="text" required maxlength="100">
+              </label>
+              <label>
+                Description <span class="optional">(optional)</span>
+                <textarea id="service-description" rows="3" maxlength="1000"></textarea>
+              </label>
+              <div class="form-row">
+                <label>
+                  Duration (minutes)
+                  <input id="service-duration" type="number" min="30" step="30" required>
+                </label>
+                <label>
+                  Price (USD)
+                  <input id="service-price" type="number" min="0" step="0.01" required>
+                </label>
+              </div>
+              <label class="checkbox">
+                <input id="service-active" type="checkbox" checked>
+                Active and bookable
+              </label>
+              <div class="form-actions">
+                <button id="service-submit" class="button primary" type="submit">Save service</button>
+                <button id="service-reset" class="button ghost" type="button" hidden>Cancel edit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-panel" data-admin-panel="providers" aria-label="Providers" hidden>
+        <div class="panel-grid">
+          <div class="card panel-card">
+            <h2>All providers</h2>
+            <p class="muted">“Hours” opens the weekly schedule for that provider.</p>
+            <div id="provider-admin-list" class="table-wrap">
+              <p class="muted">Loading providers…</p>
+            </div>
+          </div>
+
+          <div class="card panel-card">
+            <h2 id="provider-form-title">New provider</h2>
+            <p id="provider-identity" class="muted" hidden></p>
+            <form id="provider-form" class="stack-form">
+              <input id="provider-id" type="hidden">
+              <div id="provider-create-fields" class="stack-form">
+                <label>
+                  Name
+                  <input id="provider-name" type="text" maxlength="80">
+                </label>
+                <label>
+                  Email
+                  <input id="provider-email" type="email" maxlength="254">
+                </label>
+                <label>
+                  Phone <span class="optional">(optional)</span>
+                  <input id="provider-phone" type="tel" maxlength="30">
+                </label>
+                <label>
+                  Temporary password
+                  <input id="provider-password" type="password" minlength="8"
+                         maxlength="128" autocomplete="new-password">
+                </label>
+              </div>
+              <label>
+                Specialization <span class="optional">(optional)</span>
+                <input id="provider-specialization" type="text" maxlength="100">
+              </label>
+              <label id="provider-active-field" class="checkbox" hidden>
+                <input id="provider-active" type="checkbox" checked>
+                Active and accepting bookings
+              </label>
+              <fieldset id="provider-services" class="check-grid">
+                <legend>Services offered</legend>
+              </fieldset>
+              <div class="form-actions">
+                <button id="provider-submit" class="button primary" type="submit">Create provider</button>
+                <button id="provider-reset" class="button ghost" type="button" hidden>Cancel edit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-panel" data-admin-panel="reports" aria-label="Reports" hidden>
+        <form id="report-form" class="card report-controls">
+          <label>
+            From
+            <input id="report-from" type="date" required>
+          </label>
+          <label>
+            To
+            <input id="report-to" type="date" required>
+          </label>
+          <button class="button primary" type="submit">Run report</button>
+          <a id="report-export" class="button ghost" href="#" download>Download CSV</a>
+        </form>
+
+        <div id="report-summary" class="report-cards">
+          <p class="muted">Choose a range and run the report.</p>
+        </div>
+        <div id="report-tables"></div>
+      </section>
+    </section>
+
+    <section id="availability-view" class="view" hidden aria-labelledby="availability-heading">
+      <div class="section-head">
+        <div>
+          <h1 id="availability-heading">Availability</h1>
+          <p class="muted">Weekly hours and full days off. Changes are checked against upcoming bookings.</p>
+        </div>
+      </div>
+
+      <label id="availability-provider-field" class="inline-field">
+        Provider
+        <select id="availability-provider"></select>
+      </label>
+      <p id="availability-note" class="muted"></p>
+
+      <div class="panel-grid">
+        <div class="card panel-card">
+          <h2>Weekly hours</h2>
+          <p class="muted">Times use a 24-hour clock, for example 09:00 to 17:00.</p>
+          <div id="availability-windows" class="window-list">
+            <p class="muted">Loading hours…</p>
+          </div>
+          <div class="form-actions">
+            <button id="add-window" class="button ghost" type="button">Add hours</button>
+            <button id="save-windows" class="button primary" type="button">Save hours</button>
+          </div>
+        </div>
+
+        <div class="card panel-card">
+          <h2>Time off</h2>
+          <form id="time-off-form" class="inline-form">
+            <label>
+              Date
+              <input id="time-off-date" type="date" required>
+            </label>
+            <label>
+              Reason <span class="optional">(optional)</span>
+              <input id="time-off-reason" type="text" maxlength="200">
+            </label>
+            <button class="button primary" type="submit">Add day off</button>
+          </form>
+          <div id="time-off-list" class="table-wrap">
+            <p class="muted">No upcoming days off.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <dialog id="reschedule-dialog" class="dialog" aria-labelledby="reschedule-heading">
+    <form id="reschedule-form" class="dialog-card">
+      <div class="dialog-head">
+        <div>
+          <h2 id="reschedule-heading">Reschedule appointment</h2>
+          <p id="reschedule-summary" class="muted"></p>
+        </div>
+        <button id="reschedule-close" class="icon-button" type="button" aria-label="Close">
+          ×
+        </button>
+      </div>
+
+      <label class="date-field">
+        New date
+        <input id="reschedule-date" type="date" required>
+      </label>
+
+      <div id="reschedule-slots" class="slot-area">
+        <p class="muted">Pick a date to see available times.</p>
+      </div>
+
+      <div class="dialog-actions">
+        <button id="reschedule-cancel" class="button ghost" type="button">Keep current time</button>
+        <button id="reschedule-confirm" class="button primary" type="submit" disabled>
+          Confirm new time
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
